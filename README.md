@@ -37,7 +37,7 @@ I assume the system is Ubuntu 18.04 and the Python version is 3.7.9 in this part
         └── sample
     ```
 
-1. Add the following line to the end of `~/.bashrc`. 
+1. Append the following line to the end of `~/.bashrc`. 
 
     ```bash
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/.mujoco/mujoco200/bin
@@ -48,7 +48,13 @@ I assume the system is Ubuntu 18.04 and the Python version is 3.7.9 in this part
 1. Install some packages with `apt-get`.
 
     ```bash
-    sudo apt-get install libosmesa6-dev libgl1-mesa-glx libglfw3 patchelf
+    sudo apt-get install libosmesa6-dev libgl1-mesa-glx libglfw3 patchelf libglew-dev
+    ```
+
+1. Append the following line to the end of `~/.bashrc`. 
+
+    ```bash
+    export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libGLEW.so
     ```
 
 1. Install `mujoco-py` with `pip`. You can also install it with [the other packages](#other-python-packages).
@@ -60,3 +66,7 @@ I prepare a `requirements.txt` that specifies all the necessary Python packages 
 ```bash
 pip install -r requirements.txt
 ```
+
+### Verify installation
+
+I prepare a script `tests/test_installation.py` to check if everything is installed properly. Execute this script, and you will see a manipulator in a room, in front of which is a table. 

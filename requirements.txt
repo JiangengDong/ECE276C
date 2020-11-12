@@ -1,6 +1,6 @@
-mujoco-py==2.0.2.13
+mujoco-py==2.0.2.9
 numpy==1.19.4
-robotsuite==2.2.1
+robosuite==1.0.1
 torch==1.7.0
 matplotlib==3.3.2
 tensorboard==2.3.0
