@@ -4,7 +4,7 @@ robosuite==1.0.1
 torch==1.7.0
 matplotlib==3.3.2
 tensorboard==2.3.0
-tianshou==0.3.0
+tianshou
 gym==0.17.3
 tqdm==4.51.0
 scipy==1.5.4
