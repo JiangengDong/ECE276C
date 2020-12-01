@@ -15,6 +15,7 @@ from mujoco_py import MjSim, MjViewer
 import gym
 import numpy as np
 from collections import OrderedDict
+import glfw
 
 
 class JuggleEnv:
@@ -99,7 +100,7 @@ class JuggleEnv:
         self.robot.reset()
 
         # reset pingpong
-        pingpong_pos = self.target + np.random.randn(3)*0.05
+        pingpong_pos = self.target + np.random.rand(3)*0.1-0.05
         pingpong_quat = np.array([1.0, 0.0, 0.0, 0.0])
         self.sim.data.set_joint_qpos("pingpong_free_joint", np.concatenate([pingpong_pos, pingpong_quat]))
 
@@ -124,8 +125,6 @@ class JuggleEnv:
         # get robot observation
         di = self.robot.get_observations(di)
 
-        # TODO: get camera observation
-
         # get pingpong observation
         pingpong_pos = np.array(self.sim.data.body_xpos[self._pingpong_body_id])
         di["pingpong_pos"] = pingpong_pos
@@ -138,7 +137,7 @@ class JuggleEnv:
             raise ValueError("executing action in terminated episode")
 
         policy_step = True
-        for i in range(int(self.control_timestep / self.model_timestep)):
+        for _ in range(int(self.control_timestep / self.model_timestep)):
             self.sim.forward()
             self.robot.control(action=action, policy_step=policy_step)
             self.sim.step()
@@ -170,7 +169,7 @@ class JuggleEnv:
 
     def _destroy_viewer(self):
         if self.viewer is not None:
-            self.viewer.close()
+            glfw.destroy_window(self.viewer.window)
             self.viewer = None
 
     def seed(self):

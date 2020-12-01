@@ -4,7 +4,7 @@ This project, which is a final project of the ECE276C course in UCSD, aims to tr
 
 ## Dependencies' installation guide
 
-I assume the system is Ubuntu 18.04 and the Python version is 3.7.9 in this part. 
+We assume the system is Ubuntu 18.04 and the Python version is 3.7.9 in this part. 
 
 ### MuJoCo
 
@@ -69,4 +69,46 @@ pip install -r requirements.txt
 
 ### Verify installation
 
-I prepare a script `tests/test_installation.py` to check if everything is installed properly. Execute this script, and you will see a manipulator in a room, in front of which is a table. 
+If everything is installed properly, you can test the `JuggleEnv` with the following demo code. 
+
+```python
+from juggle_env import JuggleEnv
+import numpy as np 
+import time
+
+env = JuggleEnv()
+ob = env.reset()
+for _ in range(500):
+    env.step(np.zeros((7, )))
+    env.render()
+    time.sleep(0.02)
+env.close()
+```
+
+## Environment design
+
+The `JuggleEnv` is composed of two parts: an 7-dof IIWA robot and a ping-pong ball. We adopt the gym's API, and the details of the methods are explained below.
+
+### reset 
+
+During reset, two operation are taken. 
+
+1. Set the manipulator's joints back to the initial values with some noise. 
+
+    The initial values are [0.0, 0.7, 0.0, -1.4, 0.0, -0.7, 0.0]. The noises on the 7 joints are Gaussian and independent, with mu=0 and sigma=0.05.
+
+1. Place the ball randomly in a initial region. 
+
+    The position of the ball is uniformly distributed in the AABB [[0.75, -0.05, 1.95], [0.85, 0.05, 2.05]].
+
+### reward
+
+The reward consists of two parts: state part and control part. The state part is to enforce the ball to bounce between the paddle and a max height. The action part is to prevent the robot from taking rapid movement. 
+
+### step
+
+We use a joint velocity controller within the environment, so the input to the step function should be the velocity of each joints. The control frequency is 50Hz, and the maximum time span of an episode is 20s. 
+
+### render & close
+
+Till now, we only provide a "human" rendering. If you want to record a video, press "v" key during the execution. This will produce a `video-00000.mp4` under the `/tmp/` directory. 
