@@ -99,15 +99,24 @@ During reset, two operation are taken.
 
 1. Place the ball randomly in a initial region. 
 
-    The position of the ball is uniformly distributed in the AABB [[0.75, -0.05, 1.95], [0.85, 0.05, 2.05]].
+    The position of the ball is uniformly distributed in the AABB [[0.75, -0.05, 1.95], [0.85, 0.05, 2.05]]. 
 
-### reward
+The observation is an ordered dict containing the following numpy arrays.
 
-The reward consists of two parts: state part and control part. The state part is to enforce the ball to bounce between the paddle and a max height. The action part is to prevent the robot from taking rapid movement. 
+1. "robot0_joint_pos"
+1. "robot0_joint_vel"
+1. "robot0_eef_pos"
+1. "robot0_eef_quat"
+1. "robot0_gripper_qpos"
+1. "robot0_gripper_qvel"
+1. "robot0_robot_state"
+1. "pingpong_pos"
 
 ### step
 
 We use a joint velocity controller within the environment, so the input to the step function should be the velocity of each joints. The control frequency is 50Hz, and the maximum time span of an episode is 20s. 
+
+The reward consists of two parts: the state part and the control part. The state part is the distance on the x-y plane between the end-effector and ping-pong, added with a score that is achieved every time the ping-pong pass through the z=0.8 plane from downside to upside. The action part is to prevent the robot from taking rapid movement. 
 
 ### render & close
 
