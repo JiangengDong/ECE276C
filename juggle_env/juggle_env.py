@@ -24,7 +24,7 @@ class JuggleEnv:
         self.control_timestep: float = 1.0 / self.control_freq
         self.viewer = None
         self.horizon = 1000
-        self.target = np.array([0.8, 0.0, 2.0])
+        self.target = np.array([0.8, 0.0, 1.9])
 
         # load model
         self.robot: Robot = None
@@ -49,10 +49,13 @@ class JuggleEnv:
 
         # internel variable for scoring
         self._below_plane = False
-        self.plane_height = 1.8
+        self.plane_height = 1.5
 
     def _load_model(self):
         # Load the desired controller's default config as a dict
+        controller_config = load_controller_config(default_controller="JOINT_VELOCITY")
+        controller_config["output_max"] = 1.0
+        controller_config["output_min"] = -1.0
         robot_noise = {
             "magnitude": [0.05]*7, 
             "type": "gaussian"
@@ -60,7 +63,8 @@ class JuggleEnv:
         self.robot = SingleArm(
             robot_type="IIWA",
             idn=0,
-            initial_qpos=[0.0, 0.7, 0.0, -1.4, 0.0, -0.7, 0.0],
+            controller_config=controller_config,
+            initial_qpos=[0.0, 0.7, 0.0, -1.4, 0.0, -0.56, 0.0],
             initialization_noise=robot_noise, 
             gripper_type="PaddleGripper",
             gripper_visualization=True,
@@ -74,10 +78,11 @@ class JuggleEnv:
 
         self.pingpong = BallObject(
             name="pingpong",
-            size=[0.04],
+            size=[0.02],
             rgba=[0.8, 0.8, 0, 1],
             solref=[0.1, 0.03],
-            solimp=[0, 0, 1])
+            solimp=[0, 0, 1], 
+            density=100)
         pingpong_model = self.pingpong.get_collision()
         pingpong_model.append(new_joint(name="pingpong_free_joint", type="free"))
         pingpong_model.set("pos", "0.8 0 2.0")
@@ -101,10 +106,10 @@ class JuggleEnv:
     def _reset_internel(self):
         # reset robot
         self.robot.setup_references()
-        self.robot.reset()
+        self.robot.reset(deterministic=False)
 
         # reset pingpong
-        pingpong_pos = self.target + np.random.rand(3)*0.1-0.05
+        pingpong_pos = self.target + np.random.rand(3)*0.08-0.04
         pingpong_quat = np.array([1.0, 0.0, 0.0, 0.0])
         self.sim.data.set_joint_qpos("pingpong_free_joint", np.concatenate([pingpong_pos, pingpong_quat]))
 
@@ -143,6 +148,7 @@ class JuggleEnv:
         for _ in range(int(self.control_timestep / self.model_timestep)):
             self.sim.forward()
             self.robot.control(action=action, policy_step=policy_step)
+            # self.sim.data.ctrl[:] = action*5.0
             self.sim.step()
             policy_step = False
             # check if the ball pass the plane
@@ -154,23 +160,25 @@ class JuggleEnv:
 
         self.timestep += 1
         self.cur_time += self.control_timestep
-        self.done = self.timestep >= self.horizon
         observation = self._get_observation()
-        print(observation["robot0_eef_pos"])
-        reward = self._get_reward(observation, action) + score
+        dist_xy = np.linalg.norm((observation["robot0_eef_pos"] - observation["pingpong_pos"])[:2])
+        # paddle_height = observation["robot0_eef_pos"][2]
+        self.done = self.timestep >= self.horizon or dist_xy > 0.2
+        reward = score # + 0 * (0.2 - dist_xy)
         return observation, reward, self.done, {}
 
-    def _get_reward(self, observation, action):
-        diff = observation["robot0_eef_pos"] - observation["pingpong_pos"]
-        return - 0.1*np.linalg.norm(diff[:2]) - 0.01*np.linalg.norm(action) 
-
-    def render(self):
-        self._get_viewer().render()
+    def render(self, mode="human"):
+        if mode == "human":
+            self._get_viewer().render()
+        elif mode == "rgb_array":
+            img = self.sim.render(1920, 1080)
+            return img[::-1, :, ::-1]
 
     def _get_viewer(self):
         if self.viewer is None:
             self.viewer = MjViewer(self.sim)
             self.viewer.vopt.geomgroup[0] = 0
+            self.viewer._hide_overlay = True
         return self.viewer
 
     def close(self):
