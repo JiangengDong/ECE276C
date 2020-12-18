@@ -95,29 +95,33 @@ During reset, two operation are taken.
 
 1. Set the manipulator's joints back to the initial values with some noise. 
 
-    The initial values are [0.0, 0.7, 0.0, -1.4, 0.0, -0.7, 0.0]. The noises on the 7 joints are Gaussian and independent, with mu=0 and sigma=0.05.
+    The initial values are [0.0, 0.7, 0.0, -1.4, 0.0, -0.56, 0.0]. The noises on the 7 joints are Gaussian and independent, with mu=0 and sigma=0.02.
 
 1. Place the ball randomly in a initial region. 
 
-    The position of the ball is uniformly distributed in the AABB [[0.75, -0.05, 1.95], [0.85, 0.05, 2.05]]. 
+    The position of the ball is uniformly distributed in the AABB [[0.76, -0.06, 1.96], [0.84, 0.04, 2.04]]. 
 
 The observation is an ordered dict containing the following numpy arrays.
 
-1. "robot0_joint_pos"
-1. "robot0_joint_vel"
-1. "robot0_eef_pos"
-1. "robot0_eef_quat"
-1. "robot0_gripper_qpos"
-1. "robot0_gripper_qvel"
-1. "robot0_robot_state"
-1. "pingpong_pos"
+1. `"robot0_joint_pos"`
+1. `"robot0_joint_vel"`
+1. `"robot0_eef_pos"`
+1. `"robot0_eef_quat"`
+1. `"robot0_gripper_qpos"`
+1. `"robot0_gripper_qvel"`
+1. `"robot0_robot_state"`
+1. `"pingpong_pos"`
 
 ### step
 
-We use a joint velocity controller within the environment, so the input to the step function should be the velocity of each joints. The control frequency is 50Hz, and the maximum time span of an episode is 20s. 
+We use a joint velocity controller within the environment, so the input to the step function should be the velocity of each joints. The control frequency is 50Hz, and the maximum time span of an episode is 20s. The input should be in the range [-1, 1].
 
 The reward consists of two parts: the state part and the control part. The state part is the distance on the x-y plane between the end-effector and ping-pong, added with a score that is achieved every time the ping-pong pass through the z=0.8 plane from downside to upside. The action part is to prevent the robot from taking rapid movement. 
 
 ### render & close
 
-Till now, we only provide a "human" rendering. If you want to record a video, press "v" key during the execution. This will produce a `video-00000.mp4` under the `/tmp/` directory. 
+We provide two kinds of rendering: "human" and "rgb\_array". You can use `opencv` to generate a video by concatanating all the images returned by `env.render("rgb_array")`. One defect of our rendering functions is that it pops a window regardless the type you choose. 
+
+## Training result
+
+The results are put in the `data` folder. 
